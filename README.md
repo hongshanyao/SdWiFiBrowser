@@ -25,12 +25,12 @@ After power up, SD WIFI PRO will create a wireless access points, the AP
 ssid named as "SD-WIFI-PRO-RD".
 Let device,such as PC and mobile, connect wirelessly to SD-WIFI-PRO-RD, 
 after success, you can access the SD WIFI PRO by web browser.
-The default AP local ip is 192.168.4.1, so usging "http://192.168.4.1" 
+The default AP local ip is 192.168.4.1, so usging "http://192.168.4.1:7125" 
 the Web address to asscess to SD WIFI PRO.
 
 ### Functions
 1. List and Upload files
-After acccess to SD WIFI PRO by http://192.168.4.1, now SWD show file list 
+After acccess to SD WIFI PRO by http://192.168.4.1:7125, now SWD show file list 
 page at brownse.
 The page list all the files in the SD card of SD WIFI PRO(8GB high-spped 
 memory).
@@ -55,4 +55,12 @@ Note:the SD WIFI PRO use AsyncTCP and ESPAsyncWebServer.
 AsyncTCP: https://github.com/dvarrel/AsyncTCP
 ESPAsyncWebServer: https://github.com/me-no-dev/ESPAsyncWebServer
 
-    
+
+
+### Creality Print
+
+**Only sending G-code is supported; control over the 3D printer is not supported.**
+
+![01](./assets/01.jpg)
+
+![02](./assets/02.jpg)

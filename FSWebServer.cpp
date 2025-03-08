@@ -10,7 +10,7 @@
 const char* PARAM_MESSAGE = "message";
 uint8_t printer_sd_type = 0;
 
-FSWebServer server(80);
+FSWebServer server(7125);
 
 FSWebServer::FSWebServer(uint16_t port) : AsyncWebServer(port) {}
 
@@ -18,6 +18,27 @@ void FSWebServer::begin(FS* fs) {
     _fs = fs;
 
     AsyncWebServer::begin();
+
+    server.on("/machine/multi_machine", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  		this->onHttpMultiPrinterInfo(request);
+  	});
+
+    server.on("/machine/system_info", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  		this->onHttpSystemInfo(request);
+  	});
+
+    server.on("/printer/objects/query", HTTP_GET, [this](AsyncWebServerRequest *request) {
+  		this->onHttpObjectsQuery(request);
+  	});
+
+    server.on("/server/files/upload", HTTP_POST, [](AsyncWebServerRequest *request) { 
+  	  request->send(200, "text/plain", ""); },[this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *file, size_t len, bool final) {
+		    if (filename.charAt(0) != '/') {
+          filename = '/' + filename;
+        }
+        this->onHttpFileUpload(request, filename, index, file, len, final);
+      }
+    );
 
     server.on("/relinquish", HTTP_GET, [this](AsyncWebServerRequest *request) {
   		this->onHttpRelinquish(request);
@@ -37,7 +58,12 @@ void FSWebServer::begin(FS* fs) {
 
   	server.on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) { 
   	  request->send(200, "text/plain", ""); },[this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
-		  this->onHttpFileUpload(request, filename, index, data, len, final);
+		  if (request->url() != "/upload") {
+        DEBUG_LOG("Upload bad args"); 
+        request->send(500, "text/plain","UPLOAD:BADARGS");
+        return;
+      }
+      this->onHttpFileUpload(request, filename, index, data, len, final);
 	  });
 
     server.on("/wifiap", HTTP_POST, [this](AsyncWebServerRequest *request) {
@@ -375,12 +401,6 @@ void FSWebServer::onHttpDelete(AsyncWebServerRequest *request) {
 void FSWebServer::onHttpFileUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
   static File uploadFile;
 
-  if (request->url() != "/upload") {
-    DEBUG_LOG("Upload bad args"); 
-    request->send(500, "text/plain","UPLOAD:BADARGS");
-    return;
-  }
-
   switch(sdcontrol.canWeTakeControl())
   { 
     case -1: {
@@ -428,3 +448,55 @@ void FSWebServer::onHttpFileUpload(AsyncWebServerRequest *request, String filena
   }
 }
 
+void FSWebServer::onHttpMultiPrinterInfo(AsyncWebServerRequest *request) {
+  JsonDocument doc;
+  JsonDocument printerInfo;
+  JsonDocument multiPrinterInfo;
+
+  String output = "";
+
+  printerInfo["printer_id"] = 1;
+  printerInfo["machine_type"] = "Ender-3 S1 Pro";
+  printerInfo["ip"] = this->get_ip_address();
+  printerInfo["machine_name"] = "Ender-3 S1 Pro";
+
+  multiPrinterInfo[0] = printerInfo;
+
+  doc["result"]["multi_printer_info"] = multiPrinterInfo;
+
+  serializeJson(doc, output);
+
+  request->send(200, "text/json", output);
+}
+
+void FSWebServer::onHttpSystemInfo(AsyncWebServerRequest *request) {
+  JsonDocument doc;
+  JsonDocument systemInfo;
+  JsonDocument network;
+  JsonDocument wlan0;
+
+  String output = "";
+
+  wlan0["mac_address"] = "<redacted_mac>";
+  network["wlan0"] = wlan0;
+  systemInfo["network"] = network;
+
+  doc["result"]["system_info"] = systemInfo;
+
+  serializeJson(doc, output);
+
+  request->send(200, "text/json", output);
+}
+
+void FSWebServer::onHttpObjectsQuery(AsyncWebServerRequest *request) {
+  request->send(200, "text/json", "{}");
+}
+
+String FSWebServer::get_ip_address() {
+  IPAddress ipAddress = WiFi.localIP();
+
+  return String(ipAddress[0]) + String(".") +\
+  String(ipAddress[1]) + String(".") +\
+  String(ipAddress[2]) + String(".") +\
+  String(ipAddress[3]);
+}

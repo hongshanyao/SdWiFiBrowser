@@ -73,6 +73,12 @@ protected:
     void onHttpWifiStatus(AsyncWebServerRequest *request);
     void onHttpWifiAP(AsyncWebServerRequest *request);
     void onHttpWifiList(AsyncWebServerRequest *request);
+
+    void onHttpMultiPrinterInfo(AsyncWebServerRequest *request);
+    void onHttpSystemInfo(AsyncWebServerRequest *request);
+    void onHttpObjectsQuery(AsyncWebServerRequest *request);
+
+    String get_ip_address();
 };
 
 extern FSWebServer server;
