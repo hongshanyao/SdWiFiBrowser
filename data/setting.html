@@ -169,6 +169,69 @@
             xmlHttp.send(null);
         }
 
+        function onClickPrinterSave() {
+            var printer_name = document.getElementById('printer_name').value;
+            if (printer_name == '') {
+                alert("Printer name cannot be empty");
+                return;
+            }
+
+            var status = document.getElementById('printer_status');
+            status.innerText = "Saving printer settings...";
+
+            xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    var resp = xmlHttp.responseText;
+                    console.log("Get printer save response:", resp);
+                    
+                    if (resp.startsWith('PRINTER:')) {
+                        if (resp.includes('SaveSuccess')) {
+                            status.innerText = "Printer settings saved successfully.";
+                        } else if (resp.includes('SaveFailed')) {
+                            status.innerText = "Failed to save printer settings.";
+                        } else {
+                            status.innerText = "Error: " + resp.substr(resp.indexOf(':') + 1);
+                        }
+                    }
+                }
+            };
+
+            try {
+                xmlHttp.open('POST', '/printer?name=' + encodeURIComponent(printer_name), true);
+                xmlHttp.send(null);
+            } catch (error) {
+                console.log("Error saving printer settings:", error);
+                status.innerText = "Error: Failed to send request";
+            }
+        }
+
+        // Load printer name when page loads
+        window.onload = function() {
+            // ... existing onload code if any ...
+            
+            // Get current printer name
+            xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                    try {
+                        var printerInfo = JSON.parse(xmlHttp.responseText);
+                        if (printerInfo && printerInfo.name) {
+                            document.getElementById('printer_name').value = printerInfo.name;
+                        }
+                    } catch (error) {
+                        console.log("Error parsing printer info:", error);
+                    }
+                }
+            };
+
+            try {
+                xmlHttp.open('GET', '/printer', true);
+                xmlHttp.send(null);
+            } catch (error) {
+                console.log("Error getting printer info:", error);
+            }
+        }
     </script>
 </head>
 
@@ -263,6 +326,25 @@
                         <!-- <input class="btn" type="button" value="Scan" onclick=javascript:onClickScan() />
                         <br> -->
                         <span id="status"></span>
+                    </form>
+                </fieldset>
+            </center>
+        </div>
+        <div>
+            <center>
+                <fieldset>
+                    <legend>Printer</legend>
+                    <form class="form-horizontal" role="form">
+                        <label class="input">
+                            <span>Name</span>
+                            <input id="printer_name" type="text" name="printer_name">
+                        </label>
+                        <br>
+                        <div class="btn-container">
+                            <input class="btn btn-connect" type="button" value="Save"
+                                onclick=javascript:onClickPrinterSave() />
+                        </div>
+                        <span id="printer_status"></span>
                     </form>
                 </fieldset>
             </center>

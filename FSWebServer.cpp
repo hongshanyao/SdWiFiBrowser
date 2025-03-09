@@ -6,6 +6,7 @@
 #include "serial.h"
 #include "network.h"
 #include "config.h"
+#include "printer.h"
 
 const char* PARAM_MESSAGE = "message";
 uint8_t printer_sd_type = 0;
@@ -85,6 +86,10 @@ void FSWebServer::begin(FS* fs) {
     server.on("/wifilist", HTTP_GET, [this](AsyncWebServerRequest *request) {
   		this->onHttpWifiList(request);
   	});
+
+    server.on("/printer", HTTP_GET | HTTP_POST, [this](AsyncWebServerRequest *request) {
+        this->onHttpPrinter(request);
+    });
 
 	  server.onNotFound([this](AsyncWebServerRequest *request) {
       this->onHttpNotFound(request);
@@ -455,10 +460,13 @@ void FSWebServer::onHttpMultiPrinterInfo(AsyncWebServerRequest *request) {
 
   String output = "";
 
+  // Get current printer info
+  PRINTER_INFO info = printer.read();
+
   printerInfo["printer_id"] = 1;
-  printerInfo["machine_type"] = "Ender-3 S1 Pro";
+  printerInfo["machine_type"] = info.name;  // Use name as type
   printerInfo["ip"] = this->get_ip_address();
-  printerInfo["machine_name"] = "Ender-3 S1 Pro";
+  printerInfo["machine_name"] = info.name;
 
   multiPrinterInfo[0] = printerInfo;
 
@@ -499,4 +507,40 @@ String FSWebServer::get_ip_address() {
   String(ipAddress[1]) + String(".") +\
   String(ipAddress[2]) + String(".") +\
   String(ipAddress[3]);
+}
+
+void FSWebServer::onHttpPrinter(AsyncWebServerRequest *request) {
+    if (request->method() == HTTP_GET) {
+        // Handle GET request - return printer info
+        PRINTER_INFO info = printer.read();
+        
+        JsonDocument doc;
+        doc["name"] = info.name;
+        
+        String output;
+        serializeJson(doc, output);
+        request->send(200, "application/json", output);
+    }
+    else if (request->method() == HTTP_POST) {
+        // Handle POST request - save printer info
+        if (!request->hasArg("name")) {
+            request->send(400, "text/plain", "PRINTER:NoName");
+            return;
+        }
+        
+        String printer_name = request->arg("name");
+        if (printer_name.length() == 0) {
+            request->send(400, "text/plain", "PRINTER:EmptyName");
+            return;
+        }
+        
+        PRINTER_INFO info;
+        strlcpy(info.name, printer_name.c_str(), sizeof(info.name));
+        
+        if (printer.save(info)) {
+            request->send(200, "text/plain", "PRINTER:SaveSuccess");
+        } else {
+            request->send(500, "text/plain", "PRINTER:SaveFailed");
+        }
+    }
 }

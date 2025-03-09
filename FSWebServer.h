@@ -77,6 +77,9 @@ protected:
     void onHttpMultiPrinterInfo(AsyncWebServerRequest *request);
     void onHttpSystemInfo(AsyncWebServerRequest *request);
     void onHttpObjectsQuery(AsyncWebServerRequest *request);
+    
+    // Combined printer endpoint
+    void onHttpPrinter(AsyncWebServerRequest *request);
 
     String get_ip_address();
 };
