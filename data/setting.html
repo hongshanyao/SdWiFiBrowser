@@ -5,6 +5,138 @@
     <title>SD WIFI PRO SETTING</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="css/bootstrap.min.css"> <!-- https://getbootstrap.com/ -->
+    <style type="text/css">
+        .input input {
+            height: 30px;
+            width: 200px;
+        }
+
+        .btn {
+            height: 35px;
+            background-color: #689bd0;
+            border: 0px;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 20px;
+        }
+
+        .btn-ap {
+            width: 160px;
+        }
+
+        .btn-connect {
+            width: 160px;
+        }
+
+        .back-btn {
+            margin: 10px auto;
+            top: 10px;
+            left: 10px;
+            width: 80px;
+            height: 30px;
+            font-size: 12px;
+        }
+        .container {
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center
+        }
+
+        fieldset {
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        legend {
+            padding: 0 8px;
+            margin-left: -8px;
+            width: auto;
+            text-align: left;
+        }
+
+        form {
+            margin-top: 5px;
+        }
+
+        .password-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 24px;
+            height: 16px;
+            border: none;
+            outline: none;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            opacity: 0.7;
+            transition: opacity 0.15s ease;
+            background-color: transparent;
+        }
+
+        .password-toggle::before,
+        .password-toggle::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: opacity 0.15s ease;
+            background-color: transparent;
+        }
+
+        .password-toggle::before {
+            background-image: url('img/eye-on.svg');
+            opacity: 1;
+        }
+
+        .password-toggle::after {
+            background-image: url('img/eye-off.svg');
+            opacity: 0;
+        }
+
+        .password-toggle:hover {
+            opacity: 1;
+        }
+
+        .password-toggle:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .password-toggle.visible::before {
+            opacity: 0;
+        }
+
+        .password-toggle.visible::after {
+            opacity: 1;
+        }
+
+        /* Hide browser's password reveal button */
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none;
+        }
+    </style>
     <script>
         var timeWifiStatus = 1;
         function updateWifiStatus() {
@@ -232,71 +364,21 @@
                 console.log("Error getting printer info:", error);
             }
         }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.classList.add('visible');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.classList.remove('visible');
+            }
+        }
     </script>
 </head>
-
-<style type="text/css">
-    .input input {
-        height: 30px;
-        width: 200px;
-    }
-
-    .btn {
-        height: 35px;
-        background-color: #689bd0;
-        border: 0px;
-        color: #ffffff;
-        margin-bottom: 5px;
-    }
-
-    .btn-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 10px;
-        gap: 20px;
-    }
-
-    .btn-ap {
-        width: 160px;
-    }
-
-    .btn-connect {
-        width: 160px;
-    }
-
-    .back-btn {
-        margin: 10px auto;
-        top: 10px;
-        left: 10px;
-        width: 80px;
-        height: 30px;
-        font-size: 12px;
-    }
-    .container {
-        max-width: 600px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center
-    }
-
-    fieldset {
-        margin: 10px auto;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-
-    legend {
-        padding: 0 8px;
-        margin-left: -8px;
-        width: auto;
-        text-align: left;
-    }
-
-    form {
-        margin-top: 5px;
-    }
-</style>
 
 <body>
     <div class="container">
@@ -315,7 +397,10 @@
                         <br>
                         <label class="input">
                             <span>PASS</span>
-                            <input id="password" type="text" name="password">
+                            <div class="password-container">
+                                <input id="password" type="password" name="password" autocomplete="current-password">
+                                <button type="button" id="password-toggle" class="password-toggle" onclick="togglePasswordVisibility()"></button>
+                            </div>
                         </label>
                         <div class="btn-container">
                             <input class="btn btn-ap" type="button" value="Go to AP mode"
